@@ -148,3 +148,13 @@ data_monthly |>
   filter(change == 1) |>
   summarise(distinct_calendar_months = n_distinct(month(date)))
 ```
+
+## First activations by quarter of the year
+
+```{r}
+data |>
+  filter(treatment == 1) |>
+  group_by(MunicipalityCode) |>
+  summarise(first_date = min(date)) |>
+  count(quarter = quarter(first_date), name = "first_activations")
+```

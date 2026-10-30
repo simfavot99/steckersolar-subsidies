@@ -116,3 +116,41 @@ ggsave(here("figures", "figure_1_event_study.png"), p_es,
 
 p_es
 ```
+
+## Section 6.1: estimates on Weber's 12 treated cities
+
+```{r}
+weber_cities <- c(
+  "Berlin", "Bonn, Stadt", "Braunschweig", "Darmstadt, Wissenschaftsstadt",
+  "Dortmund", "Dresden", "Duisburg", "Essen", "Frankfurt am Main, Stadt",
+  "Koln", "Munchen", "Stuttgart"
+)
+
+m4_weber <- did_multiplegt_dyn(
+  df        = filter(data, Municipality %in% weber_cities | ever_treated == 0),
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4
+)
+print(m4_weber)
+sum(m4_weber$results$Effects[, "Estimate"])
+```
+
+## Section 6.1: never-treated rate at the switchers' second quarter of operation
+
+```{r}
+never_treated_rate <- data |>
+  filter(ever_treated == 0) |>
+  group_by(time) |>
+  summarise(rate = mean(n_installations_per_1000))
+
+data |>
+  filter(treatment == 1) |>
+  group_by(id) |>
+  summarise(time = min(time) + 1) |>
+  left_join(never_treated_rate, by = "time") |>
+  summarise(mean_rate = mean(rate))
+```
