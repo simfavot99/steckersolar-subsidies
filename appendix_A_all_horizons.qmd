@@ -1,0 +1,186 @@
+---
+title: 'Appendix A — Full event-study estimates (Tables A.1, A.2)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Table A.1: k = 8
+
+```{r}
+m8_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 8,
+  placebo = 8
+)
+print(m8_nc)
+```
+
+## Table A.2
+
+Each chunk prints one row of Table A.2: k, joint p-values (effects, placebos), average cumulative effect (estimate, SE, CI), average number of quarters over which the effect accumulates.
+
+### k = 1
+
+```{r}
+m1_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 1,
+  placebo = 1
+)
+c(
+  k = 1,
+  m1_nc$results$ATE[1, 1:4],
+  quarters = m1_nc$results$delta_D_avg_total
+)
+```
+
+### k = 2
+
+```{r}
+m2_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 2,
+  placebo = 2
+)
+c(
+  k = 2,
+  p_effects = m2_nc$results$p_jointeffects,
+  p_placebos = m2_nc$results$p_jointplacebo,
+  m2_nc$results$ATE[1, 1:4],
+  quarters = m2_nc$results$delta_D_avg_total
+)
+```
+
+### k = 3
+
+```{r}
+m3_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 3,
+  placebo = 3
+)
+c(
+  k = 3,
+  p_effects = m3_nc$results$p_jointeffects,
+  p_placebos = m3_nc$results$p_jointplacebo,
+  m3_nc$results$ATE[1, 1:4],
+  quarters = m3_nc$results$delta_D_avg_total
+)
+```
+
+### k = 4
+
+```{r}
+m4_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 4,
+  placebo = 4
+)
+c(
+  k = 4,
+  p_effects = m4_nc$results$p_jointeffects,
+  p_placebos = m4_nc$results$p_jointplacebo,
+  m4_nc$results$ATE[1, 1:4],
+  quarters = m4_nc$results$delta_D_avg_total
+)
+```
+
+### k = 5
+
+```{r}
+m5_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 5,
+  placebo = 5
+)
+c(
+  k = 5,
+  p_effects = m5_nc$results$p_jointeffects,
+  p_placebos = m5_nc$results$p_jointplacebo,
+  m5_nc$results$ATE[1, 1:4],
+  quarters = m5_nc$results$delta_D_avg_total
+)
+```
+
+### k = 6
+
+```{r}
+m6_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 6,
+  placebo = 6
+)
+c(
+  k = 6,
+  p_effects = m6_nc$results$p_jointeffects,
+  p_placebos = m6_nc$results$p_jointplacebo,
+  m6_nc$results$ATE[1, 1:4],
+  quarters = m6_nc$results$delta_D_avg_total
+)
+```
+
+### k = 7
+
+```{r}
+m7_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 7,
+  placebo = 7
+)
+c(
+  k = 7,
+  p_effects = m7_nc$results$p_jointeffects,
+  p_placebos = m7_nc$results$p_jointplacebo,
+  m7_nc$results$ATE[1, 1:4],
+  quarters = m7_nc$results$delta_D_avg_total
+)
+```
+
+### k = 8 (model estimated above)
+
+```{r}
+c(
+  k = 8,
+  p_effects = m8_nc$results$p_jointeffects,
+  p_placebos = m8_nc$results$p_jointplacebo,
+  m8_nc$results$ATE[1, 1:4],
+  quarters = m8_nc$results$delta_D_avg_total
+)
+```

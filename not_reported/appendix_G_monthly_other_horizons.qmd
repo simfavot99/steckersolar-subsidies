@@ -1,0 +1,115 @@
+---
+title: 'Not reported — Monthly panel, other horizons'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_monthly.parquet"))
+```
+
+## k = 1
+
+```{r}
+mm1_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1
+)
+print(mm1_nc)
+```
+
+## k = 2
+
+```{r}
+mm2_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2
+)
+print(mm2_nc)
+```
+
+## k = 5
+
+```{r}
+mm5_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5
+)
+print(mm5_nc)
+```
+
+## k = 7
+
+```{r}
+mm7_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 6
+)
+print(mm7_nc)
+```
+
+## k = 8
+
+```{r}
+mm8_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 6
+)
+print(mm8_nc)
+```
+
+## k = 10
+
+```{r}
+mm10_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 10,
+  placebo   = 6
+)
+print(mm10_nc)
+```
+
+## k = 11
+
+```{r}
+mm11_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 11,
+  placebo   = 6
+)
+print(mm11_nc)
+```

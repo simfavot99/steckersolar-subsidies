@@ -1,0 +1,278 @@
+---
+title: 'Not reported — Alternative aggregation rules with income control'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data_majority <- read_parquet(here("data", "data_quarterly_majority.parquet"))
+data_all_months <- read_parquet(here("data", "data_quarterly_all_months.parquet"))
+
+data_majority <- data_majority |>
+  mutate(income_per_capita_eur_time = income_per_capita_eur * time)
+data_all_months <- data_all_months |>
+  mutate(income_per_capita_eur_time = income_per_capita_eur * time)
+
+controls_list <- "income_per_capita_eur_time"
+```
+
+## Majority rule (2 of 3 months)
+
+### k = 1
+
+```{r}
+majority_k1_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1,
+  controls  = controls_list
+)
+print(majority_k1_c)
+```
+
+### k = 2
+
+```{r}
+majority_k2_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2,
+  controls  = controls_list
+)
+print(majority_k2_c)
+```
+
+### k = 3
+
+```{r}
+majority_k3_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3,
+  controls  = controls_list
+)
+print(majority_k3_c)
+```
+
+### k = 4
+
+```{r}
+majority_k4_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4,
+  controls  = controls_list
+)
+print(majority_k4_c)
+```
+
+### k = 5
+
+```{r}
+majority_k5_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5,
+  controls  = controls_list
+)
+print(majority_k5_c)
+```
+
+### k = 6
+
+```{r}
+majority_k6_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 6,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(majority_k6_c)
+```
+
+### k = 7
+
+```{r}
+majority_k7_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 7,
+  controls  = controls_list
+)
+print(majority_k7_c)
+```
+
+### k = 8
+
+```{r}
+majority_k8_c <- did_multiplegt_dyn(
+  df        = data_majority,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 8,
+  controls  = controls_list
+)
+print(majority_k8_c)
+```
+
+## All-months rule (3 of 3 months)
+
+### k = 1
+
+```{r}
+all_months_k1_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1,
+  controls  = controls_list
+)
+print(all_months_k1_c)
+```
+
+### k = 2
+
+```{r}
+all_months_k2_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2,
+  controls  = controls_list
+)
+print(all_months_k2_c)
+```
+
+### k = 3
+
+```{r}
+all_months_k3_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3,
+  controls  = controls_list
+)
+print(all_months_k3_c)
+```
+
+### k = 4
+
+```{r}
+all_months_k4_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4,
+  controls  = controls_list
+)
+print(all_months_k4_c)
+```
+
+### k = 5
+
+```{r}
+all_months_k5_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5,
+  controls  = controls_list
+)
+print(all_months_k5_c)
+```
+
+### k = 6
+
+```{r}
+all_months_k6_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 6,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(all_months_k6_c)
+```
+
+### k = 7
+
+```{r}
+all_months_k7_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 7,
+  controls  = controls_list
+)
+print(all_months_k7_c)
+```
+
+### k = 8
+
+```{r}
+all_months_k8_c <- did_multiplegt_dyn(
+  df        = data_all_months,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 8,
+  controls  = controls_list
+)
+print(all_months_k8_c)
+```

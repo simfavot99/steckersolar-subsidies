@@ -1,0 +1,457 @@
+---
+title: 'Not reported — Alternative aggregation rules, static estimator'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, DIDmultiplegtSTAT)
+
+data_majority <- read_parquet(here("data", "data_quarterly_majority.parquet"))
+data_all_months <- read_parquet(here("data", "data_quarterly_all_months.parquet"))
+```
+
+## Majority rule (2 of 3 months)
+
+### M1: Main specification
+
+```{r}
+majority_m1 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(majority_m1)
+```
+
+### M2: Explicit AOSS
+
+```{r}
+majority_m2 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "aoss",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(majority_m2)
+```
+
+### M3: Explicit WAOSS
+
+```{r}
+majority_m3 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(majority_m3)
+```
+
+### M4: AOSS and WAOSS
+
+```{r}
+majority_m4 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = c("aoss", "waoss"),
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(majority_m4)
+```
+
+### M5: Test AOSS = WAOSS
+
+```{r}
+majority_m5 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = c("aoss", "waoss"),
+  exact_match = TRUE,
+  aoss_vs_waoss = TRUE,
+  placebo = TRUE
+)
+print(majority_m5)
+```
+
+### M6: Switchers up (0 -> 1)
+
+```{r}
+majority_m6 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  switchers = "up",
+  placebo = TRUE
+)
+print(majority_m6)
+```
+
+### M7: Switchers down (1 -> 0)
+
+```{r}
+majority_m7 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  switchers = "down",
+  placebo = TRUE
+)
+print(majority_m7)
+```
+
+### M8: Placebo test
+
+```{r}
+majority_m8 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(majority_m8)
+```
+
+### M9: Disaggregated by transition period
+
+```{r}
+majority_m9 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  disaggregate = TRUE,
+  placebo = TRUE
+)
+print(majority_m9)
+```
+
+### M10: Placebo and disaggregated
+
+```{r}
+majority_m10 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE,
+  disaggregate = TRUE
+)
+print(majority_m10)
+```
+
+### M11: No exact matching
+
+```{r}
+majority_m11 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  placebo = TRUE
+)
+print(majority_m11)
+```
+
+### M12: WAOSS, doubly robust
+
+```{r}
+majority_m12 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "dr",
+  placebo = TRUE
+)
+print(majority_m12)
+```
+
+### M13: WAOSS, regression adjustment
+
+```{r}
+majority_m13 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "ra",
+  placebo = TRUE
+)
+print(majority_m13)
+```
+
+### M14: WAOSS, propensity score
+
+```{r}
+majority_m14 <- did_multiplegt_stat(
+  df = data_majority,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "ps",
+  placebo = TRUE
+)
+print(majority_m14)
+```
+
+## All-months rule (3 of 3 months)
+
+### M1: Main specification
+
+```{r}
+all_months_m1 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(all_months_m1)
+```
+
+### M2: Explicit AOSS
+
+```{r}
+all_months_m2 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "aoss",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(all_months_m2)
+```
+
+### M3: Explicit WAOSS
+
+```{r}
+all_months_m3 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(all_months_m3)
+```
+
+### M4: AOSS and WAOSS
+
+```{r}
+all_months_m4 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = c("aoss", "waoss"),
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(all_months_m4)
+```
+
+### M5: Test AOSS = WAOSS
+
+```{r}
+all_months_m5 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = c("aoss", "waoss"),
+  exact_match = TRUE,
+  aoss_vs_waoss = TRUE,
+  placebo = TRUE
+)
+print(all_months_m5)
+```
+
+### M6: Switchers up (0 -> 1)
+
+```{r}
+all_months_m6 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  switchers = "up",
+  placebo = TRUE
+)
+print(all_months_m6)
+```
+
+### M7: Switchers down (1 -> 0)
+
+```{r}
+all_months_m7 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  switchers = "down",
+  placebo = TRUE
+)
+print(all_months_m7)
+```
+
+### M8: Placebo test
+
+```{r}
+all_months_m8 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(all_months_m8)
+```
+
+### M9: Disaggregated by transition period
+
+```{r}
+all_months_m9 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  disaggregate = TRUE,
+  placebo = TRUE
+)
+print(all_months_m9)
+```
+
+### M10: Placebo and disaggregated
+
+```{r}
+all_months_m10 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  exact_match = TRUE,
+  placebo = TRUE,
+  disaggregate = TRUE
+)
+print(all_months_m10)
+```
+
+### M11: No exact matching
+
+```{r}
+all_months_m11 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  placebo = TRUE
+)
+print(all_months_m11)
+```
+
+### M12: WAOSS, doubly robust
+
+```{r}
+all_months_m12 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "dr",
+  placebo = TRUE
+)
+print(all_months_m12)
+```
+
+### M13: WAOSS, regression adjustment
+
+```{r}
+all_months_m13 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "ra",
+  placebo = TRUE
+)
+print(all_months_m13)
+```
+
+### M14: WAOSS, propensity score
+
+```{r}
+all_months_m14 <- did_multiplegt_stat(
+  df = data_all_months,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "waoss",
+  estimation_method = "ps",
+  placebo = TRUE
+)
+print(all_months_m14)
+```

@@ -1,0 +1,267 @@
+---
+title: 'Appendix F — Income control (Table F.1)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+
+data <- data |>
+  mutate(income_per_capita_eur_time = income_per_capita_eur * time)
+
+controls_list <- "income_per_capita_eur_time"
+```
+
+## Without income control
+
+### k = 1
+
+```{r}
+m1_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1
+)
+print(m1_nc)
+```
+
+### k = 2
+
+```{r}
+m2_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2
+)
+print(m2_nc)
+```
+
+### k = 3
+
+```{r}
+m3_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3
+)
+print(m3_nc)
+```
+
+### k = 4
+
+```{r}
+m4_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4
+)
+print(m4_nc)
+```
+
+### k = 5
+
+```{r}
+m5_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5
+)
+print(m5_nc)
+```
+
+### k = 6
+
+```{r}
+m6_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 6,
+  placebo   = 6
+)
+print(m6_nc)
+```
+
+### k = 7
+
+```{r}
+m7_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 7
+)
+print(m7_nc)
+```
+
+### k = 8
+
+```{r}
+m8_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 8
+)
+print(m8_nc)
+```
+
+## With income × time
+
+### k = 1
+
+```{r}
+m1_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1,
+  controls  = controls_list
+)
+print(m1_c)
+```
+
+### k = 2
+
+```{r}
+m2_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2,
+  controls  = controls_list
+)
+print(m2_c)
+```
+
+### k = 3
+
+```{r}
+m3_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3,
+  controls  = controls_list
+)
+print(m3_c)
+```
+
+### k = 4
+
+```{r}
+m4_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4,
+  controls  = controls_list
+)
+print(m4_c)
+```
+
+### k = 5
+
+```{r}
+m5_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5,
+  controls  = controls_list
+)
+print(m5_c)
+```
+
+### k = 6
+
+```{r}
+m6_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 6,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(m6_c)
+```
+
+### k = 7
+
+```{r}
+m7_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 7,
+  controls  = controls_list
+)
+print(m7_c)
+```
+
+### k = 8
+
+```{r}
+m8_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 8,
+  controls  = controls_list
+)
+print(m8_c)
+```

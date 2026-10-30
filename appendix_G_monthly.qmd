@@ -1,0 +1,131 @@
+---
+title: 'Appendix G — Monthly panel (Table G.1)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_monthly.parquet"))
+data_quarterly <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Activations and closures in the monthly panel
+
+```{r}
+data |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(change = treatment - lag(treatment)) |>
+  ungroup() |>
+  summarise(
+    n_activation_events = sum(change == 1, na.rm = TRUE),
+    n_exit_events       = sum(change == -1, na.rm = TRUE)
+  )
+```
+
+## Months without the program in the first three treated quarters
+
+```{r}
+first_quarter <- data_quarterly |>
+  filter(treatment == 1) |>
+  group_by(MunicipalityCode) |>
+  summarise(first_quarter = min(date))
+
+data |>
+  inner_join(first_quarter, by = "MunicipalityCode") |>
+  filter(floor_date(date, "quarter") >= first_quarter,
+         floor_date(date, "quarter") <  first_quarter + months(9)) |>
+  group_by(MunicipalityCode) |>
+  summarise(months_without_program = sum(treatment == 0)) |>
+  summarise(mean_months_without_program = mean(months_without_program))
+```
+
+## Table G.1, Panels A and B (k = 12)
+
+```{r}
+mm12_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 12,
+  placebo = 6
+)
+print(mm12_nc)
+```
+
+## k = 4
+
+```{r}
+mm4_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 4,
+  placebo = 4
+)
+print(mm4_nc)
+```
+
+## Table G.1, Panel C
+
+```{r}
+# k = 3
+mm3_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 3,
+  placebo = 3
+)
+c(
+  k = 3,
+  p_effects = mm3_nc$results$p_jointeffects,
+  p_placebos = mm3_nc$results$p_jointplacebo
+)
+
+# k = 6
+mm6_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 6,
+  placebo = 6
+)
+c(
+  k = 6,
+  p_effects = mm6_nc$results$p_jointeffects,
+  p_placebos = mm6_nc$results$p_jointplacebo
+)
+
+# k = 9
+mm9_nc <- did_multiplegt_dyn(
+  df = data,
+  outcome = "n_installations_per_1000",
+  group = "id",
+  time = "time",
+  treatment = "treatment",
+  effects = 9,
+  placebo = 6
+)
+c(
+  k = 9,
+  p_effects = mm9_nc$results$p_jointeffects,
+  p_placebos = mm9_nc$results$p_jointplacebo
+)
+
+# k = 12 (model estimated above)
+c(
+  k = 12,
+  p_effects = mm12_nc$results$p_jointeffects,
+  p_placebos = mm12_nc$results$p_jointplacebo
+)
+```

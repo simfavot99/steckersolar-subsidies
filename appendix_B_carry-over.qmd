@@ -1,0 +1,89 @@
+---
+title: 'Appendix B — Carry-over test (Tables B.1, B.2)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, fect)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Table B.1: exit event study, s = 3
+
+```{r}
+carry_3 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data = data,
+  index = c("MunicipalityCode", "time"),
+  method = "fe",
+  force = "two-way",
+  se = TRUE,
+  nboots = 1000,
+  parallel = TRUE,
+  seed = 42,
+  carryoverTest = TRUE,
+  carryover.period = c(1, 3)
+)
+carry_3$est.att.off[as.character(-6:7), c("ATT.OFF", "S.E.", "p.value", "count.off")]
+```
+
+## Table B.2
+
+Each chunk prints one row of Table B.2: s, ATT carry-over, SE, 95% CI, p-value of H0: ATT carry-over = 0, TOST p-value.
+
+### s = 2
+
+```{r}
+carry_2 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data = data,
+  index = c("MunicipalityCode", "time"),
+  method = "fe",
+  force = "two-way",
+  se = TRUE,
+  nboots = 1000,
+  parallel = TRUE,
+  seed = 42,
+  carryoverTest = TRUE,
+  carryover.period = c(1, 2)
+)
+c(
+  s = 2,
+  carry_2$est.carryover[1, c("ATT.carryover", "S.E.", "CI.lower", "CI.upper", "p.value")],
+  tost_p = carry_2$test.out$carryover.equiv.p
+)
+```
+
+### s = 3 (model estimated above)
+
+```{r}
+c(
+  s = 3,
+  carry_3$est.carryover[1, c("ATT.carryover", "S.E.", "CI.lower", "CI.upper", "p.value")],
+  tost_p = carry_3$test.out$carryover.equiv.p
+)
+```
+
+### s = 4
+
+```{r}
+carry_4 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data = data,
+  index = c("MunicipalityCode", "time"),
+  method = "fe",
+  force = "two-way",
+  se = TRUE,
+  nboots = 1000,
+  parallel = TRUE,
+  seed = 42,
+  carryoverTest = TRUE,
+  carryover.period = c(1, 4)
+)
+c(
+  s = 4,
+  carry_4$est.carryover[1, c("ATT.carryover", "S.E.", "CI.lower", "CI.upper", "p.value")],
+  tost_p = carry_4$test.out$carryover.equiv.p
+)
+```

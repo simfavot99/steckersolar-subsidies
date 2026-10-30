@@ -1,0 +1,118 @@
+---
+title: 'Section 6.1 — Dynamic effects'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, scales, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Table 2
+
+```{r}
+m3_nc <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3
+)
+print(m3_nc)
+```
+
+## Figure 1
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+col_pre     <- "#0E8A5F"
+col_post    <- "#D9461E"
+col_ref     <- "#1F2422"
+col_line    <- "#C3C3BD"
+col_ink     <- "#6E6E68"
+col_surface <- "#FFFFFF"
+
+es_cols <- c(placebo = col_pre, reference = col_ref, effect = col_post)
+
+rows <- function(mat, sign, type) {
+  tibble(
+    relative_time = sign * seq_len(nrow(mat)),
+    type          = type,
+    estimate      = mat[, "Estimate"],
+    lb_ci         = mat[, "LB CI"],
+    ub_ci         = mat[, "UB CI"]
+  )
+}
+
+es <- bind_rows(
+  rows(m3_nc$results$Placebos, -1, "placebo"),
+  tibble(relative_time = 0, type = "reference", estimate = 0,
+         lb_ci = NA_real_, ub_ci = NA_real_),
+  rows(m3_nc$results$Effects, 1, "effect")
+) |>
+  mutate(
+    type = factor(type, levels = c("placebo", "reference", "effect")),
+    lab  = if_else(type == "effect", number(estimate, 0.001), NA_character_)
+  ) |>
+  arrange(relative_time)
+
+subtitle <- sprintf(
+  "Effects jointly zero: p = %.3f   ·   placebos jointly zero: p = %.3f",
+  m3_nc$results$p_jointeffects, m3_nc$results$p_jointplacebo
+)
+
+p_es <- ggplot(es, aes(relative_time, estimate, colour = type)) +
+  geom_hline(yintercept = 0, colour = "#DCDCD5", linewidth = 0.5) +
+  geom_vline(xintercept = 0, colour = "#DCDCD5", linewidth = 0.5,
+             linetype = "22") +
+  geom_line(colour = col_line, linewidth = 0.9, lineend = "round") +
+  geom_linerange(aes(ymin = lb_ci, ymax = ub_ci),
+                 linewidth = 1.1, lineend = "round", na.rm = TRUE) +
+  geom_point(aes(fill = type), shape = 21, colour = col_surface,
+             size = 3.8, stroke = 1.3) +
+  geom_text(aes(y = ub_ci, label = lab), vjust = -1.1, size = 3,
+            fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
+  scale_colour_manual(values = es_cols, breaks = c("placebo", "effect"),
+                      labels = c("Placebos (pre)", "Effects (post)"),
+                      drop = FALSE, name = NULL) +
+  scale_fill_manual(values = es_cols, guide = "none") +
+  scale_x_continuous(breaks = es$relative_time,
+                     expand = expansion(add = 0.45)) +
+  scale_y_continuous(labels = number_format(accuracy = 0.01),
+                     expand = expansion(mult = c(0.10, 0.16))) +
+  labs(subtitle = subtitle,
+       x        = "Quarters relative to the treatment change   (0 = last quarter before the change)",
+       y        = "Effect on registrations per 1,000") +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.background    = element_rect(fill = col_surface, colour = NA),
+    panel.background   = element_rect(fill = col_surface, colour = NA),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(colour = "#EDEDE7", linewidth = 0.35),
+    plot.subtitle = element_text(size = 9, colour = col_ink,
+                                 margin = margin(b = 4)),
+    plot.title.position   = "plot",
+    axis.title   = element_text(size = 8.5, colour = col_ink),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text    = element_text(size = 9, colour = col_ink),
+    legend.position      = "top",
+    legend.justification = "left",
+    legend.direction     = "horizontal",
+    legend.text          = element_text(size = 8.5, colour = col_ink),
+    legend.margin        = margin(t = 2, b = 6),
+    legend.box.spacing   = unit(0, "pt"),
+    plot.margin = margin(18, 20, 12, 16)
+  )
+
+dir.create(here("figures"), showWarnings = FALSE)
+ggsave(here("figures", "figure_1_event_study.png"), p_es,
+       width = 8, height = 5, dpi = 300, bg = col_surface)
+
+p_es
+```

@@ -1,0 +1,146 @@
+---
+title: 'Appendix E — TWFE benchmark and decomposition (Table E.1)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, fixest, TwoWayFEWeights)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Table E.1, Panel A
+
+```{r}
+twfe <- feols(
+  n_installations_per_1000 ~ treatment | MunicipalityCode + date,
+  data    = data,
+  cluster = ~MunicipalityCode
+)
+twfe
+```
+
+## Table E.1, Panels B and C
+
+```{r}
+twowayfeweights(
+  data,
+  "n_installations_per_1000", "MunicipalityCode", "date", "treatment",
+  type             = "feTR",
+  summary_measures = TRUE
+)
+```
+
+## TWFE event study and its decomposition
+
+```{r}
+data <- data |>
+  group_by(MunicipalityCode) |>
+  mutate(Fg = min(time[treatment == 1], na.rm = TRUE),
+         Fg = ifelse(is.infinite(Fg), NA, Fg)) |>
+  ungroup() |>
+  mutate(
+    rel_time       = time - (Fg - 1),
+    rel_time1      = replace_na(as.integer(rel_time == 1), 0L),
+    rel_time2      = replace_na(as.integer(rel_time == 2), 0L),
+    rel_time3      = replace_na(as.integer(rel_time == 3), 0L),
+    rel_timeminus1 = replace_na(as.integer(rel_time == -1), 0L),
+    rel_timeminus2 = replace_na(as.integer(rel_time == -2), 0L),
+    rel_timeminus3 = replace_na(as.integer(rel_time == -3), 0L)
+  )
+
+twfe_es <- feols(
+  n_installations_per_1000 ~ rel_timeminus3 + rel_timeminus2 + rel_timeminus1 +
+    rel_time1 + rel_time2 + rel_time3 | MunicipalityCode + date,
+  data    = data,
+  cluster = ~MunicipalityCode
+)
+twfe_es
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time1",
+  type             = "feTR",
+  other_treatments = c("rel_time2", "rel_time3"),
+  controls         = c("rel_timeminus1", "rel_timeminus2", "rel_timeminus3")
+)
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time2",
+  type             = "feTR",
+  other_treatments = c("rel_time1", "rel_time3"),
+  controls         = c("rel_timeminus1", "rel_timeminus2", "rel_timeminus3")
+)
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time3",
+  type             = "feTR",
+  other_treatments = c("rel_time1", "rel_time2"),
+  controls         = c("rel_timeminus1", "rel_timeminus2", "rel_timeminus3")
+)
+```
+
+## TWFE event study with all relative periods and its decomposition
+
+```{r}
+rel_values <- sort(setdiff(unique(data$rel_time), c(0, NA)))
+rel_name <- function(r) if (r > 0) paste0("rel_time", r) else paste0("rel_timeminus", -r)
+for (r in rel_values) {
+  data[[rel_name(r)]] <- replace_na(as.integer(data$rel_time == r), 0L)
+}
+lags  <- sapply(rel_values[rel_values > 0], rel_name)
+leads <- sapply(rel_values[rel_values < 0], rel_name)
+
+twfe_es_all <- feols(
+  as.formula(paste("n_installations_per_1000 ~",
+                   paste(c(leads, lags), collapse = " + "),
+                   "| MunicipalityCode + date")),
+  data    = data,
+  cluster = ~MunicipalityCode
+)
+twfe_es_all
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time1",
+  type             = "feTR",
+  other_treatments = setdiff(lags, "rel_time1"),
+  controls         = leads
+)
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time2",
+  type             = "feTR",
+  other_treatments = setdiff(lags, "rel_time2"),
+  controls         = leads
+)
+
+twowayfeweights(
+  data,
+  Y                = "n_installations_per_1000",
+  G                = "MunicipalityCode",
+  T                = "time",
+  D                = "rel_time3",
+  type             = "feTR",
+  other_treatments = setdiff(lags, "rel_time3"),
+  controls         = leads
+)
+```

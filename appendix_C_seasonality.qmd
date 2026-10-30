@@ -1,0 +1,150 @@
+---
+title: 'Appendix C — Seasonality (Figure C.1, Table C.1)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, scales)
+
+data <- read_parquet(here("data", "data_quarterly.parquet")) |>
+  mutate(quarter = factor(paste0("Q", quarter(date)), levels = c("Q1", "Q2", "Q3", "Q4")))
+data_monthly <- read_parquet(here("data", "data_monthly.parquet"))
+```
+
+## Figure C.1
+
+```{r}
+#| fig-width: 10
+#| fig-height: 5
+col_pre     <- "#0E8A5F"
+col_post    <- "#D9461E"
+col_ink     <- "#6E6E68"
+col_surface <- "#FFFFFF"
+
+pal_evertreated <- c(
+  "Never-treated (21)" = col_pre,
+  "Ever-treated (29)"  = col_post
+)
+
+pal_linetype <- c(
+  "Never-treated (21)" = "42",
+  "Ever-treated (29)"  = "solid"
+)
+
+plot_df <- data |>
+  mutate(group = if_else(ever_treated == 1, "Ever-treated (29)", "Never-treated (21)")) |>
+  group_by(date, group) |>
+  summarise(mean_y = mean(n_installations_per_1000), .groups = "drop")
+
+x_min <- min(plot_df$date)
+x_max <- max(plot_df$date)
+
+years <- year(x_min):year(x_max)
+shade_df <- tibble(
+  xmin = as.Date(paste0(years, "-04-01")),
+  xmax = as.Date(paste0(years, "-10-01"))
+) |>
+  filter(xmax >= x_min, xmin <= x_max)
+
+pad <- 30  # days of horizontal breathing room around the data
+shade_df <- shade_df |>
+  mutate(xmin = pmax(xmin, x_min - pad), xmax = pmin(xmax, x_max + pad))
+
+p_c1 <- ggplot() +
+  geom_rect(
+    data = shade_df,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+    fill = "#EDEDE7", alpha = 0.7
+  ) +
+  geom_line(data = plot_df,
+            aes(date, mean_y, colour = group, linetype = group, group = group),
+            linewidth = 0.9, lineend = "round") +
+  geom_point(data = filter(plot_df, group == "Never-treated (21)"),
+             aes(date, mean_y, fill = group),
+             shape = 21, colour = col_surface, size = 2.6, stroke = 1.1) +
+  geom_point(data = filter(plot_df, group == "Ever-treated (29)"),
+             aes(date, mean_y, fill = group),
+             shape = 21, colour = col_surface, size = 2.6, stroke = 1.1) +
+  scale_colour_manual(values = pal_evertreated, name = NULL) +
+  scale_fill_manual(values = pal_evertreated, guide = "none") +
+  scale_linetype_manual(values = pal_linetype, name = NULL) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y",
+               expand = expansion(add = pad)) +
+  scale_y_continuous(labels = number_format(accuracy = 0.01),
+                     expand = expansion(mult = c(0.06, 0.10))) +
+  labs(subtitle = "Shaded bands mark April–September",
+       x        = NULL,
+       y        = "New registrations per 1,000 inhabitants") +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.background    = element_rect(fill = col_surface, colour = NA),
+    panel.background   = element_rect(fill = col_surface, colour = NA),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(colour = "#E3E3DC", linewidth = 0.35),
+    plot.subtitle = element_text(size = 9, colour = col_ink,
+                                 margin = margin(b = 4)),
+    plot.title.position   = "plot",
+    axis.title   = element_text(size = 8.5, colour = col_ink),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text    = element_text(size = 9, colour = col_ink),
+    legend.position      = "top",
+    legend.justification = "left",
+    legend.direction     = "horizontal",
+    legend.text          = element_text(size = 8.5, colour = col_ink),
+    legend.key.width     = unit(1.6, "cm"),
+    legend.margin        = margin(t = 2, b = 6),
+    legend.box.spacing   = unit(0, "pt"),
+    plot.margin = margin(18, 20, 12, 16)
+  )
+
+dir.create(here("figures"), showWarnings = FALSE)
+ggsave(here("figures", "figure_C1_seasonality.png"), p_c1,
+       width = 10, height = 5, dpi = 300, bg = col_surface)
+
+p_c1
+```
+
+## Table C.1, Panel A
+
+```{r}
+data |>
+  group_by(MunicipalityCode) |>
+  mutate(municipality_mean = mean(n_installations_per_1000)) |>
+  group_by(MunicipalityCode, quarter) |>
+  summarise(seasonal_deviation = mean(n_installations_per_1000 - municipality_mean), .groups = "drop") |>
+  group_by(quarter) |>
+  summarise(
+    min    = min(seasonal_deviation),
+    p25    = quantile(seasonal_deviation, 0.25),
+    median = median(seasonal_deviation),
+    mean   = mean(seasonal_deviation),
+    p75    = quantile(seasonal_deviation, 0.75),
+    max    = max(seasonal_deviation)
+  )
+```
+
+## Table C.1, Panel B
+
+```{r}
+data |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(change = treatment - lag(treatment)) |>
+  ungroup() |>
+  filter(change == 1) |>
+  count(quarter, name = "activations") |>
+  mutate(share = activations / sum(activations))
+```
+
+## Calendar months of activations in the monthly panel
+
+```{r}
+data_monthly |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(change = treatment - lag(treatment)) |>
+  ungroup() |>
+  filter(change == 1) |>
+  summarise(distinct_calendar_months = n_distinct(month(date)))
+```

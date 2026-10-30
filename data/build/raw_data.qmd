@@ -1,0 +1,66 @@
+---
+title: 'Raw data'
+format: html
+---
+
+Builds data/raw/ from the full MaStR download of 16 June 2026
+(EinheitenSolarJune.parquet, not included) and from the Destatis Regionaldatenbank.
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, restatis)
+```
+
+# 1. MaStR: plug-in solar units in the sample municipalities
+
+```{r}
+municipality_codes <- c(
+  "08311000", "03403000", "05111000", "08111000", "05711000", "06411000",
+  "05314000", "03159016", "12054000", "05978012", "09190157", "05315000",
+  "03101000", "01002000", "08221000", "09162000", "16053000", "03455007",
+  "08421000", "09161000", "11000000", "05113000", "09362000", "14612000",
+  "05112000", "09761000", "05913000", "06412000", "06611000", "03355022",
+  "08435016", "08118046", "09562000", "05974056", "04011000", "04012000",
+  "08415061", "16051000", "03241001", "05515000", "15003000", "15002000",
+  "14713000", "08212000", "06414000", "05334002", "10041100", "09563000",
+  "14511000", "02000000"
+)
+
+open_dataset(here("data", "raw", "EinheitenSolarJune.parquet")) |>
+  filter(ArtDerSolaranlage == "2961") |>
+  collect() |>
+  filter(str_pad(Gemeindeschluessel, 8, pad = "0") %in% municipality_codes) |>
+  write_parquet(here("data", "raw", "EinheitenSolarJune_plugin.parquet"))
+```
+
+# 2. Destatis: population 2023 and 2018, income 2018
+
+```{r}
+gen_auth_save(database = "regio")
+
+gen_table(
+  name      = "12411-01-01-5",
+  database  = "regio",
+  language  = "en",
+  startyear = 2023,
+  endyear   = 2023
+) |>
+  write_parquet(here("data", "raw", "destatis_population_2023.parquet"))
+
+gen_table(
+  name      = "12411-01-01-5",
+  database  = "regio",
+  language  = "en",
+  startyear = 2018,
+  endyear   = 2018
+) |>
+  write_parquet(here("data", "raw", "destatis_population_2018.parquet"))
+
+gen_table(
+  name      = "73111-01-01-5",
+  database  = "regio",
+  language  = "en",
+  startyear = 2018,
+  endyear   = 2018
+) |>
+  write_parquet(here("data", "raw", "destatis_income_2018.parquet"))
+```

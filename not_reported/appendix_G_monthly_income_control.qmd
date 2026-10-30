@@ -1,0 +1,207 @@
+---
+title: 'Not reported — Monthly panel with income control'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_monthly.parquet"))
+
+data <- data |>
+  mutate(income_per_capita_eur_time = income_per_capita_eur * time)
+
+controls_list <- "income_per_capita_eur_time"
+```
+
+## k = 1
+
+```{r}
+mm1_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 1,
+  placebo   = 1,
+  controls  = controls_list
+)
+print(mm1_c)
+```
+
+## k = 2
+
+```{r}
+mm2_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 2,
+  placebo   = 2,
+  controls  = controls_list
+)
+print(mm2_c)
+```
+
+## k = 3
+
+```{r}
+mm3_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 3,
+  placebo   = 3,
+  controls  = controls_list
+)
+print(mm3_c)
+```
+
+## k = 4
+
+```{r}
+mm4_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 4,
+  placebo   = 4,
+  controls  = controls_list
+)
+print(mm4_c)
+```
+
+## k = 5
+
+```{r}
+mm5_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 5,
+  placebo   = 5,
+  controls  = controls_list
+)
+print(mm5_c)
+```
+
+## k = 6
+
+```{r}
+mm6_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 6,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm6_c)
+```
+
+## k = 7
+
+```{r}
+mm7_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 7,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm7_c)
+```
+
+## k = 8
+
+```{r}
+mm8_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 8,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm8_c)
+```
+
+## k = 9
+
+```{r}
+mm9_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 9,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm9_c)
+```
+
+## k = 10
+
+```{r}
+mm10_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 10,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm10_c)
+```
+
+## k = 11
+
+```{r}
+mm11_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 11,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm11_c)
+```
+
+## k = 12
+
+```{r}
+mm12_c <- did_multiplegt_dyn(
+  df        = data,
+  outcome   = "n_installations_per_1000",
+  group     = "id",
+  time      = "time",
+  treatment = "treatment",
+  effects   = 12,
+  placebo   = 6,
+  controls  = controls_list
+)
+print(mm12_c)
+```

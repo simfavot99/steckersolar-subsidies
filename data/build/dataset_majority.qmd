@@ -1,0 +1,749 @@
+---
+title: 'Dataset majority rule'
+format: html
+---
+
+Libraries:
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, knitr)
+```
+
+# 1. Monthly panel
+
+Treatment dataset (monthly):
+
+```{r}
+# TREATMENT PANEL — MONTHLY balanced panel of (muni, date) with treatment
+
+all_dates <- seq.Date(as.Date("2019-02-01"), as.Date("2026-05-07"), by = "month")
+
+muni_all <- tribble(
+  ~Municipality,                    ~MunicipalityCode,
+
+  "Freiburg im Breisgau, Stadt",    "08311000",
+  "Oldenburg (Oldenburg), Stadt",   "03403000",
+  "Dusseldorf, Stadt",              "05111000",
+  "Stuttgart",                      "08111000",
+  "Bielefeld, Stadt",               "05711000",
+  "Darmstadt, Wissenschaftsstadt",  "06411000",
+  "Bonn, Stadt",                    "05314000",
+  "Göttingen, Stadt",               "03159016",
+  "Potsdam, Landeshauptstadt",      "12054000",
+  "Fröndenberg/Ruhr, Stadt",        "05978012",
+  "Weilheim i.OB, St",              "09190157",
+  "Koln",                           "05315000",
+  "Braunschweig",                   "03101000",
+  "Kiel, Landeshauptstadt",         "01002000",
+  "Heidelberg, Stadt",              "08221000",
+  "Munchen",                        "09162000",
+  "Jena, Stadt",                    "16053000",
+  "Jever, Stadt",                   "03455007",
+  "Ulm, Universitätsstadt",         "08421000",
+  "Ingolstadt, Stadt",              "09161000",
+  "Berlin",                         "11000000",
+  "Essen",                          "05113000",
+  "Regensburg, Stadt",              "09362000",
+  "Dresden",                        "14612000",
+  "Duisburg",                       "05112000",
+  "Augsburg, Stadt",                "09761000",
+  "Dortmund",                       "05913000",
+  "Frankfurt am Main, Stadt",       "06412000",
+  "Kassel, Stadt",                  "06611000",
+
+  "Lüneburg, Hansestadt",           "03355022",
+  "Friedrichshafen, Stadt",         "08435016",
+  "Kornwestheim, Stadt",            "08118046",
+  "Erlangen",                       "09562000",
+  "Wickede (Ruhr)",                 "05974056",
+  "Bremen",                         "04011000",
+  "Bremerhaven",                    "04012000",
+  "Reutlingen",                     "08415061",
+  "Erfurt",                         "16051000",
+  "Hannover",                       "03241001",
+  "Munster",                        "05515000",
+  "Magdeburg, Landeshauptstadt",    "15003000",
+  "Halle (Saale), Stadt",           "15002000",
+  "Leipzig, Stadt",                 "14713000",
+  "Karlsruhe, Stadt",               "08212000",
+  "Wiesbaden, Landeshauptstadt",    "06414000",
+  "Aachen, Stadt",                  "05334002",
+  "Saarbrücken, Landeshauptstadt",  "10041100",
+  "Fürth, Stadt",                   "09563000",
+  "Chemnitz, Stadt",                "14511000",
+  "Hamburg",                        "02000000"
+)
+
+data.treatment <- crossing(
+  MunicipalityCode = muni_all$MunicipalityCode,
+  date = all_dates
+) |>
+  left_join(muni_all, by = "MunicipalityCode") |>
+  mutate(
+    treatment = case_when(
+      MunicipalityCode == "08311000" & date >= as.Date("2019-09-01") ~ 1L,  # Freiburg im Breisgau
+      MunicipalityCode == "03403000" & date >= as.Date("2020-01-01") & date <= as.Date("2023-03-01") ~ 1L,  # Oldenburg
+      MunicipalityCode == "05111000" & date >= as.Date("2020-05-01") & date <= as.Date("2026-01-01") ~ 1L,  # Dusseldorf
+      MunicipalityCode == "08111000" & date >= as.Date("2020-11-01") & date <= as.Date("2025-12-01") ~ 1L,  # Stuttgart
+      MunicipalityCode == "05711000" & date >= as.Date("2020-11-01") & date <= as.Date("2023-12-01") ~ 1L,  # Bielefeld
+      MunicipalityCode == "06411000" & date >= as.Date("2021-07-01") ~ 1L,  # Darmstadt
+      MunicipalityCode == "05314000" & date >= as.Date("2021-09-01") ~ 1L,  # Bonn
+      MunicipalityCode == "03159016" & (  # Göttingen
+        (date >= as.Date("2021-11-01") & date <= as.Date("2025-12-01")) |
+        (date >= as.Date("2026-06-01"))
+      ) ~ 1L,
+      MunicipalityCode == "12054000" & (  # Potsdam
+        (date >= as.Date("2022-03-01") & date <= as.Date("2022-12-01")) |
+        (date >= as.Date("2023-07-01") & date <= as.Date("2023-12-01")) |
+        (date >= as.Date("2024-03-01") & date <= as.Date("2024-08-01")) |
+        (date >= as.Date("2025-06-01"))
+      ) ~ 1L,
+      MunicipalityCode == "05978012" & date >= as.Date("2022-03-01") & date <= as.Date("2023-12-01") ~ 1L,  # Fröndenberg
+      MunicipalityCode == "09190157" & date >= as.Date("2022-04-01") & date <= as.Date("2024-12-01") ~ 1L,  # Weilheim
+      MunicipalityCode == "05315000" & date >= as.Date("2022-04-01") ~ 1L,  # Koln
+      MunicipalityCode == "03101000" & date >= as.Date("2022-04-01") ~ 1L,  # Braunschweig
+      MunicipalityCode == "01002000" & date >= as.Date("2022-04-01") & date <= as.Date("2025-12-01") ~ 1L,  # Kiel
+      MunicipalityCode == "08221000" & date >= as.Date("2022-09-01") & date <= as.Date("2024-03-01") ~ 1L,  # Heidelberg
+      MunicipalityCode == "09162000" & date >= as.Date("2022-10-01") ~ 1L,  # Munchen
+      MunicipalityCode == "16053000" & date >= as.Date("2022-11-01") & date <= as.Date("2023-12-01") ~ 1L,  # Jena
+      MunicipalityCode == "03455007" & date >= as.Date("2023-01-01") & date <= as.Date("2023-12-01") ~ 1L,  # Jever
+      MunicipalityCode == "08421000" & date >= as.Date("2023-01-01") & date <= as.Date("2026-08-01") ~ 1L,  # Ulm
+      MunicipalityCode == "09161000" & date >= as.Date("2023-01-01") & date <= as.Date("2023-09-01") ~ 1L,  # Ingolstadt
+      MunicipalityCode == "11000000" & date >= as.Date("2023-02-01") ~ 1L,  # Berlin
+      MunicipalityCode == "05113000" & date >= as.Date("2023-03-01") ~ 1L,  # Essen
+      MunicipalityCode == "09362000" & date >= as.Date("2023-03-01") ~ 1L,  # Regensburg
+      MunicipalityCode == "14612000" & date >= as.Date("2023-06-01") ~ 1L,  # Dresden
+      MunicipalityCode == "05112000" & date >= as.Date("2023-10-01") ~ 1L,  # Duisburg
+      MunicipalityCode == "09761000" & date >= as.Date("2023-10-01") & date <= as.Date("2025-12-01") ~ 1L,  # Augsburg
+      MunicipalityCode == "05913000" & date >= as.Date("2023-11-01") ~ 1L,  # Dortmund
+      MunicipalityCode == "06412000" & date >= as.Date("2023-11-01") & date <= as.Date("2025-05-01") ~ 1L,  # Frankfurt am Main
+      MunicipalityCode == "06611000" & date >= as.Date("2024-10-01") ~ 1L,  # Kassel
+
+      TRUE ~ 0L
+    )
+  ) |>
+  select(Municipality, MunicipalityCode, date, treatment) |>
+  arrange(Municipality, MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(ever_treated = max(treatment)) |>
+  ungroup()
+```
+
+Dataset:
+
+```{r}
+# LOAD AND CLEAN THE RAW MaStR DUMP
+
+data <- open_dataset(here("data", "raw", "EinheitenSolarJune_plugin.parquet"))
+
+# Step 2.1: rename German → English
+data <- data |>
+  rename(
+    UnitMastrNumber                          = EinheitMastrNummer,
+    DateLastUpdate                           = DatumLetzteAktualisierung,
+    LocationMastrNumber                      = LokationMaStRNummer,
+    GridOperatorVerificationStatus           = NetzbetreiberpruefungStatus,
+    GridOperatorVerificationDate             = NetzbetreiberpruefungDatum,
+    PlantOperatorMastrNumber                 = AnlagenbetreiberMastrNummer,
+    Country                                  = Land,
+    FederalState                             = Bundesland,
+    District                                 = Landkreis,
+    Municipality                             = Gemeinde,
+    MunicipalityCode                         = Gemeindeschluessel,
+    PostalCode                               = Postleitzahl,
+    City                                     = Ort,
+    RegistrationDate                         = Registrierungsdatum,
+    CommissioningDate                        = Inbetriebnahmedatum,
+    UnitSystemStatus                         = EinheitSystemstatus,
+    UnitOperationalStatus                    = EinheitBetriebsstatus,
+    NotPresentInMigratedUnits                = NichtVorhandenInMigriertenEinheiten,
+    PowerGenerationUnitName                  = NameStromerzeugungseinheit,
+    Weic_NotAvailable                        = Weic_nv,
+    PowerPlantNumber_NotAvailable            = Kraftwerksnummer_nv,
+    EnergySource                             = Energietraeger,
+    GrossCapacity                            = Bruttoleistung,
+    NetNominalCapacity                       = Nettonennleistung,
+    RemoteControllabilityGridOperator        = FernsteuerbarkeitNb,
+    FeedInType                               = Einspeisungsart,
+    AssignedActivePowerInverter              = ZugeordneteWirkleistungWechselrichter,
+    NumberOfModules                          = AnzahlModule,
+    TypeOfSolarSystem                        = ArtDerSolaranlage,
+    PowerLimitation                          = Leistungsbegrenzung,
+    UniformOrientationAndTiltAngle           = EinheitlicheAusrichtungUndNeigungswinkel,
+    MainOrientation                          = Hauptausrichtung,
+    MainOrientationTiltAngle                 = HauptausrichtungNeigungswinkel,
+    UsageArea                                = Nutzungsbereich,
+    EegMastrNumber                           = EegMaStRNummer,
+    StorageAtSameLocation                    = SpeicherAmGleichenOrt,
+    SecondaryOrientation                     = Nebenausrichtung,
+    SecondaryOrientationTiltAngle            = NebenausrichtungNeigungswinkel,
+    Street                                   = Strasse,
+    StreetNotFound                           = StrasseNichtGefunden,
+    HouseNumber_NotAvailable                 = Hausnummer_nv,
+    HouseNumberNotFound                      = HausnummerNichtGefunden,
+    Longitude                                = Laengengrad,
+    Latitude                                 = Breitengrad,
+    DateStartTemporaryDecommissioning        = DatumBeginnVoruebergehendeStilllegung,
+    HouseNumber                              = Hausnummer,
+    AddressAddition                          = Adresszusatz,
+    RemoteControllabilityDirectMarketer      = FernsteuerbarkeitDv,
+    PreviousPlantOperatorMastrNumber         = AltAnlagenbetreiberMastrNummer,
+    DateOfOperatorChange                     = DatumDesBetreiberwechsels,
+    DateRegistrationOfOperatorChange         = DatumRegistrierungDesBetreiberwechsels,
+    CadastralDistrict                        = Gemarkung,
+    FieldParcelNumbers                       = FlurFlurstuecknummern,
+    ConnectionToExtraHighOrHighVoltage       = AnschlussAnHoechstOderHochSpannung,
+    DatePermanentDecommissioning             = DatumEndgueltigeStilllegung,
+    SizeOfUsedAreaInHectares                 = GroesseDerInAnspruchGenommenenFlaecheInHektar,
+    PreviousUsageTypeOfArea                  = VorherigerNutzungsartenbereichDerFlaeche,
+    PredominantUsageTypeBeforeSolarConstruction = UeberwiegendeNutzungsartDerFlaecheVorErrichtung,
+    NameOfSolarPark                          = NameDesSolarparks,
+    AdditionalFeaturesOfAreaAndCurrentUsage  = ZusaetzlicheMerkmaleDerFlaecheUndDerAktuellenFlaechennutzung,
+    GenMastrNumber                           = GenMastrNummer,
+    CommissioningDateAtCurrentLocation       = InbetriebnahmedatumAmAktuellenStandort,
+    DispatchResponsible                      = Einsatzverantwortlicher,
+    CitizenEnergy                            = Buergerenergie,
+    DateResumptionOfOperation                = DatumWiederaufnahmeBetrieb,
+    PlannedCommissioningDate                 = GeplantesInbetriebnahmedatum,
+    ClearanceHeight                          = LichteHoehe,
+    PowerPlantNumber                         = Kraftwerksnummer
+  )
+
+# Step 2.2: coerce numeric columns (XML parsing stores everything as character)
+data <- data |>
+  mutate(
+    TypeOfSolarSystem           = as.integer(TypeOfSolarSystem),
+    Country                     = as.integer(Country),
+    FederalState                = as.integer(FederalState),
+    GrossCapacity               = as.numeric(GrossCapacity),
+    NetNominalCapacity          = as.numeric(NetNominalCapacity),
+    AssignedActivePowerInverter = as.numeric(AssignedActivePowerInverter),
+    NumberOfModules             = as.integer(NumberOfModules)
+  )
+
+# Step 2.3: lookup tables (TypeOfSolarSystem, Country, FederalState)
+C1 <- data.frame(
+  TypeOfSolarSystem.names = c(
+    "Structural_facilities", "Other_Structural_facilities", "Open_space",
+    "Bodies_water", "Large_parking_lot", "Plug_in_sola_system", "Onshore&Offshore_wind_power"
+  ),
+  TypeOfSolarSystem = as.integer(c(853, 2484, 852, 3002, 3058, 2961, NA))
+)
+
+C2 <- tibble(
+  Country = as.integer(c(84, 231, 90, 66, 198, 206, 106)),
+  Country.sn = c("Germany", "Switzerland", "Denmark", "Belgium", "Netherlands", "Austria", "France")
+)
+
+C3 <- data.frame(
+  FederalState = as.integer(c(
+    1409, 1402, 1400, 1403, 1412, 1408, 1410, 1407,
+    1414, 1411, 1413, 1405, 1415, 1406, 1401, 1404
+  )),
+  FederalState.names = c(
+    "North Rhine-Westphalia", "Baden-Württemberg", "Brandenburg", "Bavaria",
+    "Saarland", "Lower Saxony", "Rhineland-Palatinate", "Mecklenburg-Western Pomerania",
+    "Saxony-Anhalt", "Schleswig-Holstein", "Saxony", "Hesse",
+    "Thuringia", "Hamburg", "Berlin", "Bremen"
+  ),
+  FederalStateCode = c(
+    "DEA", "DE1", "DE4", "DE2",
+    "DEC", "DE9", "DEB", "DEM",
+    "DEE", "DEF", "DED", "DE7",
+    "DEG", "DE6", "DE3", "DE5"
+  )
+)
+
+# Step 2.4: attach lookup labels and codes to the dataset
+data <- data |>
+  left_join(C1, by = "TypeOfSolarSystem") |>
+  relocate(TypeOfSolarSystem.names, .after = TypeOfSolarSystem) |>
+  left_join(C2, by = "Country") |>
+  relocate(Country.sn, .after = Country) |>
+  left_join(C3, by = "FederalState") |>
+  relocate(FederalState.names, .after = FederalState) |>
+  relocate(FederalStateCode, .after = FederalState.names)
+
+# Step 2.5: classify balcony PVs (Solarpaket-I reform on 2024-05-16 changed the threshold)
+reform_date <- as.Date("2024-05-16")
+
+data <- data |>
+  mutate(
+    RegistrationDate  = as.Date(RegistrationDate),
+    CommissioningDate = as.Date(CommissioningDate),
+    solar_category = case_when(
+      TypeOfSolarSystem == 2961 & RegistrationDate <  reform_date & AssignedActivePowerInverter <= 0.6 ~ "Plug_in_sola_system - Balcony",
+      TypeOfSolarSystem == 2961 & RegistrationDate >= reform_date & AssignedActivePowerInverter <= 0.8 & GrossCapacity <= 2.0 ~ "Plug_in_sola_system - Balcony",
+      TypeOfSolarSystem == 2961 ~ "Plug_in_sola_system - Non-Balcony",
+      TRUE ~ TypeOfSolarSystem.names
+    )
+  )
+# Step 2.6: keep Germany only
+data <- data |>
+  filter(Country.sn == "Germany")
+
+# Step 2.7: derive date variables at every frequency we may need downstream
+data <- data |>
+  mutate(
+    date.registration.day     = RegistrationDate,
+    date.registration.week    = floor_date(RegistrationDate,  "week"),
+    date.registration.month   = floor_date(RegistrationDate,  "month"),
+    date.registration.quarter = floor_date(RegistrationDate,  "quarter"),
+    date.registration.year    = floor_date(RegistrationDate,  "year"),
+    date.commission.day       = CommissioningDate,
+    date.commission.week      = floor_date(CommissioningDate, "week"),
+    date.commission.month     = floor_date(CommissioningDate, "month"),
+    date.commission.quarter   = floor_date(CommissioningDate, "quarter"),
+    date.commission.year      = floor_date(CommissioningDate, "year")
+  )
+
+# Step 2.8: pad MunicipalityCode to 8 digits (preserve leading zeros)
+data <- data |>
+  mutate(MunicipalityCode = str_pad(as.character(MunicipalityCode), 8, pad = "0"))
+
+# FILTER TO BALCONY PVs IN TREATMENT MUNICIPALITIES, INSIDE THE PANEL RANGE
+
+data <- data |>
+  filter(solar_category == "Plug_in_sola_system - Balcony")
+
+muni_all <- data.treatment |>
+  distinct(Municipality, MunicipalityCode)
+
+data <- data |>
+  filter(MunicipalityCode %in% muni_all$MunicipalityCode)
+
+lo <- min(all_dates)
+hi <- max(all_dates)
+data <- data |>
+  filter(date.registration.month >= lo,
+         date.registration.month <= hi)
+
+# AGGREGATE TO MONTHLY OUTCOME PANEL (balanced, with cumulative stock)
+
+data.outcome <- data |>
+  count(MunicipalityCode, date = date.registration.month, name = "n_installations") |>
+  collect() |>
+  complete(
+    MunicipalityCode = muni_all$MunicipalityCode,
+    date             = all_dates,
+    fill             = list(n_installations = 0L)
+  ) |>
+  left_join(muni_all, by = "MunicipalityCode") |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(n_installations_cumulative = cumsum(n_installations)) |>
+  ungroup() |>
+  select(Municipality, MunicipalityCode, date,
+         n_installations, n_installations_cumulative)
+
+# POPULATION DENOMINATOR (2023, from Destatis regio)
+
+pop_2023 <- read_parquet(here("data", "raw", "destatis_population_2023.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",                # municipalities only
+         is.na(`2_variable_attribute_code`),           # sex Total
+         !is.na(`1_variable_attribute_label`),         # drop unnamed rows
+         !value %in% c("-", ".")) |>                   # drop Destatis sentinels (- / .)
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    population_2023  = as.numeric(value)
+  )
+
+data.outcome <- data.outcome |>
+  left_join(pop_2023 |> select(MunicipalityCode, population_2023),
+            by = "MunicipalityCode") |>
+  rename(population = population_2023) |>
+  mutate(
+    n_installations_per_1000            = n_installations            / population * 1000,
+    n_installations_cumulative_per_1000 = n_installations_cumulative / population * 1000
+  )
+
+# COVARIATE: 2018 INCOME PER CAPITA (time-invariant)
+
+# 2018 total income — Gesamtbetrag der Einkünfte (EKF002), in Tsd. EUR → EUR
+income_2018 <- read_parquet(here("data", "raw", "destatis_income_2018.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",                # municipalities only
+         value_variable_code == "EKF002",              # total income (drops LSNW01/LSNW02)
+         !is.na(`1_variable_attribute_label`),
+         !value %in% c("-", ".")) |>
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    total_income_eur = as.numeric(value) * 1000        # Tsd. EUR -> EUR
+  )
+
+# 2018 population — denominator for per-capita income
+pop_2018 <- read_parquet(here("data", "raw", "destatis_population_2018.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",
+         is.na(`2_variable_attribute_code`),
+         !is.na(`1_variable_attribute_label`),
+         !value %in% c("-", ".")) |>
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    population_2018  = as.numeric(value)
+  )
+
+income_pc_2018 <- income_2018 |>
+  inner_join(pop_2018 |> select(MunicipalityCode, population_2018),
+             by = "MunicipalityCode") |>
+  mutate(income_per_capita_eur = total_income_eur / population_2018) |>
+  select(Municipality, MunicipalityCode, income_per_capita_eur)
+
+# MERGE — outcome (panel) + treatment (panel) + income covariate (invariant)
+
+data.merged <- data.outcome |>
+  left_join(data.treatment |> select(MunicipalityCode, date, treatment, ever_treated),
+            by = c("MunicipalityCode", "date")) |>
+  left_join(income_pc_2018 |> select(MunicipalityCode, income_per_capita_eur),
+            by = "MunicipalityCode") |>
+  mutate(year = year(date)) |>
+  arrange(MunicipalityCode, date)
+
+data.merged |> print() |> glimpse()
+
+# CONVERT — cast all numeric columns to <dbl>; add integer ID / time index
+data.merged <- data.merged |>
+  mutate(
+    across(!c(Municipality, MunicipalityCode, date), as.double),
+    id   = as.double(factor(MunicipalityCode)),
+    time = as.double(factor(date))
+  )
+
+```
+
+Save it:
+
+```{r}
+write_parquet(
+  data.merged,
+  here("data", "data_monthly_majority.parquet")
+)
+
+data.monthly <- read_parquet(
+  here("data", "data_monthly_majority.parquet")
+)
+
+data.monthly |> print() |> glimpse()
+```
+
+# 2. Quarterly panel
+
+Treatment dataset (quarterly, majority rule):
+
+```{r}
+# TREATMENT PANEL — QUARTERLY balanced panel of (muni, date) with treatment
+# Majority rule: a quarter is treated iff more than half of its months are treated
+
+all_dates.quarterly <- seq.Date(
+  floor_date(as.Date("2019-02-01"), "quarter"),
+  floor_date(as.Date("2026-05-07"), "quarter"),
+  by = "quarter"
+)
+
+data.treatment.quarterly <- data.treatment |>
+  mutate(date = floor_date(date, "quarter")) |>
+  group_by(Municipality, MunicipalityCode, date) |>
+  summarise(treatment = as.integer(mean(treatment) > 0.5), .groups = "drop") |>
+  arrange(Municipality, MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(ever_treated = max(treatment)) |>
+  ungroup()
+```
+
+Dataset:
+
+```{r}
+# LOAD AND CLEAN THE RAW MaStR DUMP
+
+data.quarterly <- open_dataset(here("data", "raw", "EinheitenSolarJune_plugin.parquet"))
+
+# Step 2.1: rename German → English
+data.quarterly <- data.quarterly |>
+  rename(
+    UnitMastrNumber                          = EinheitMastrNummer,
+    DateLastUpdate                           = DatumLetzteAktualisierung,
+    LocationMastrNumber                      = LokationMaStRNummer,
+    GridOperatorVerificationStatus           = NetzbetreiberpruefungStatus,
+    GridOperatorVerificationDate             = NetzbetreiberpruefungDatum,
+    PlantOperatorMastrNumber                 = AnlagenbetreiberMastrNummer,
+    Country                                  = Land,
+    FederalState                             = Bundesland,
+    District                                 = Landkreis,
+    Municipality                             = Gemeinde,
+    MunicipalityCode                         = Gemeindeschluessel,
+    PostalCode                               = Postleitzahl,
+    City                                     = Ort,
+    RegistrationDate                         = Registrierungsdatum,
+    CommissioningDate                        = Inbetriebnahmedatum,
+    UnitSystemStatus                         = EinheitSystemstatus,
+    UnitOperationalStatus                    = EinheitBetriebsstatus,
+    NotPresentInMigratedUnits                = NichtVorhandenInMigriertenEinheiten,
+    PowerGenerationUnitName                  = NameStromerzeugungseinheit,
+    Weic_NotAvailable                        = Weic_nv,
+    PowerPlantNumber_NotAvailable            = Kraftwerksnummer_nv,
+    EnergySource                             = Energietraeger,
+    GrossCapacity                            = Bruttoleistung,
+    NetNominalCapacity                       = Nettonennleistung,
+    RemoteControllabilityGridOperator        = FernsteuerbarkeitNb,
+    FeedInType                               = Einspeisungsart,
+    AssignedActivePowerInverter              = ZugeordneteWirkleistungWechselrichter,
+    NumberOfModules                          = AnzahlModule,
+    TypeOfSolarSystem                        = ArtDerSolaranlage,
+    PowerLimitation                          = Leistungsbegrenzung,
+    UniformOrientationAndTiltAngle           = EinheitlicheAusrichtungUndNeigungswinkel,
+    MainOrientation                          = Hauptausrichtung,
+    MainOrientationTiltAngle                 = HauptausrichtungNeigungswinkel,
+    UsageArea                                = Nutzungsbereich,
+    EegMastrNumber                           = EegMaStRNummer,
+    StorageAtSameLocation                    = SpeicherAmGleichenOrt,
+    SecondaryOrientation                     = Nebenausrichtung,
+    SecondaryOrientationTiltAngle            = NebenausrichtungNeigungswinkel,
+    Street                                   = Strasse,
+    StreetNotFound                           = StrasseNichtGefunden,
+    HouseNumber_NotAvailable                 = Hausnummer_nv,
+    HouseNumberNotFound                      = HausnummerNichtGefunden,
+    Longitude                                = Laengengrad,
+    Latitude                                 = Breitengrad,
+    DateStartTemporaryDecommissioning        = DatumBeginnVoruebergehendeStilllegung,
+    HouseNumber                              = Hausnummer,
+    AddressAddition                          = Adresszusatz,
+    RemoteControllabilityDirectMarketer      = FernsteuerbarkeitDv,
+    PreviousPlantOperatorMastrNumber         = AltAnlagenbetreiberMastrNummer,
+    DateOfOperatorChange                     = DatumDesBetreiberwechsels,
+    DateRegistrationOfOperatorChange         = DatumRegistrierungDesBetreiberwechsels,
+    CadastralDistrict                        = Gemarkung,
+    FieldParcelNumbers                       = FlurFlurstuecknummern,
+    ConnectionToExtraHighOrHighVoltage       = AnschlussAnHoechstOderHochSpannung,
+    DatePermanentDecommissioning             = DatumEndgueltigeStilllegung,
+    SizeOfUsedAreaInHectares                 = GroesseDerInAnspruchGenommenenFlaecheInHektar,
+    PreviousUsageTypeOfArea                  = VorherigerNutzungsartenbereichDerFlaeche,
+    PredominantUsageTypeBeforeSolarConstruction = UeberwiegendeNutzungsartDerFlaecheVorErrichtung,
+    NameOfSolarPark                          = NameDesSolarparks,
+    AdditionalFeaturesOfAreaAndCurrentUsage  = ZusaetzlicheMerkmaleDerFlaecheUndDerAktuellenFlaechennutzung,
+    GenMastrNumber                           = GenMastrNummer,
+    CommissioningDateAtCurrentLocation       = InbetriebnahmedatumAmAktuellenStandort,
+    DispatchResponsible                      = Einsatzverantwortlicher,
+    CitizenEnergy                            = Buergerenergie,
+    DateResumptionOfOperation                = DatumWiederaufnahmeBetrieb,
+    PlannedCommissioningDate                 = GeplantesInbetriebnahmedatum,
+    ClearanceHeight                          = LichteHoehe,
+    PowerPlantNumber                         = Kraftwerksnummer
+  )
+
+# Step 2.2: coerce numeric columns (XML parsing stores everything as character)
+data.quarterly <- data.quarterly |>
+  mutate(
+    TypeOfSolarSystem           = as.integer(TypeOfSolarSystem),
+    Country                     = as.integer(Country),
+    FederalState                = as.integer(FederalState),
+    GrossCapacity               = as.numeric(GrossCapacity),
+    NetNominalCapacity          = as.numeric(NetNominalCapacity),
+    AssignedActivePowerInverter = as.numeric(AssignedActivePowerInverter),
+    NumberOfModules             = as.integer(NumberOfModules)
+  )
+
+# Step 2.3: lookup tables (TypeOfSolarSystem, Country, FederalState)
+C1.quarterly <- data.frame(
+  TypeOfSolarSystem.names = c(
+    "Structural_facilities", "Other_Structural_facilities", "Open_space",
+    "Bodies_water", "Large_parking_lot", "Plug_in_sola_system", "Onshore&Offshore_wind_power"
+  ),
+  TypeOfSolarSystem = as.integer(c(853, 2484, 852, 3002, 3058, 2961, NA))
+)
+
+C2.quarterly <- tibble(
+  Country = as.integer(c(84, 231, 90, 66, 198, 206, 106)),
+  Country.sn = c("Germany", "Switzerland", "Denmark", "Belgium", "Netherlands", "Austria", "France")
+)
+
+C3.quarterly <- data.frame(
+  FederalState = as.integer(c(
+    1409, 1402, 1400, 1403, 1412, 1408, 1410, 1407,
+    1414, 1411, 1413, 1405, 1415, 1406, 1401, 1404
+  )),
+  FederalState.names = c(
+    "North Rhine-Westphalia", "Baden-Württemberg", "Brandenburg", "Bavaria",
+    "Saarland", "Lower Saxony", "Rhineland-Palatinate", "Mecklenburg-Western Pomerania",
+    "Saxony-Anhalt", "Schleswig-Holstein", "Saxony", "Hesse",
+    "Thuringia", "Hamburg", "Berlin", "Bremen"
+  ),
+  FederalStateCode = c(
+    "DEA", "DE1", "DE4", "DE2",
+    "DEC", "DE9", "DEB", "DEM",
+    "DEE", "DEF", "DED", "DE7",
+    "DEG", "DE6", "DE3", "DE5"
+  )
+)
+
+# Step 2.4: attach lookup labels and codes to the dataset
+data.quarterly <- data.quarterly |>
+  left_join(C1.quarterly, by = "TypeOfSolarSystem") |>
+  relocate(TypeOfSolarSystem.names, .after = TypeOfSolarSystem) |>
+  left_join(C2.quarterly, by = "Country") |>
+  relocate(Country.sn, .after = Country) |>
+  left_join(C3.quarterly, by = "FederalState") |>
+  relocate(FederalState.names, .after = FederalState) |>
+  relocate(FederalStateCode, .after = FederalState.names)
+
+# Step 2.5: classify balcony PVs (Solarpaket-I reform on 2024-05-16 changed the threshold)
+reform_date <- as.Date("2024-05-16")
+
+data.quarterly <- data.quarterly |>
+  mutate(
+    RegistrationDate  = as.Date(RegistrationDate),
+    CommissioningDate = as.Date(CommissioningDate),
+    solar_category = case_when(
+      TypeOfSolarSystem == 2961 & RegistrationDate <  reform_date & AssignedActivePowerInverter <= 0.6 ~ "Plug_in_sola_system - Balcony",
+      TypeOfSolarSystem == 2961 & RegistrationDate >= reform_date & AssignedActivePowerInverter <= 0.8 & GrossCapacity <= 2.0 ~ "Plug_in_sola_system - Balcony",
+      TypeOfSolarSystem == 2961 ~ "Plug_in_sola_system - Non-Balcony",
+      TRUE ~ TypeOfSolarSystem.names
+    )
+  )
+# Step 2.6: keep Germany only
+data.quarterly <- data.quarterly |>
+  filter(Country.sn == "Germany")
+
+# Step 2.7: derive date variables at every frequency we may need downstream
+data.quarterly <- data.quarterly |>
+  mutate(
+    date.registration.day     = RegistrationDate,
+    date.registration.week    = floor_date(RegistrationDate,  "week"),
+    date.registration.month   = floor_date(RegistrationDate,  "month"),
+    date.registration.quarter = floor_date(RegistrationDate,  "quarter"),
+    date.registration.year    = floor_date(RegistrationDate,  "year"),
+    date.commission.day       = CommissioningDate,
+    date.commission.week      = floor_date(CommissioningDate, "week"),
+    date.commission.month     = floor_date(CommissioningDate, "month"),
+    date.commission.quarter   = floor_date(CommissioningDate, "quarter"),
+    date.commission.year      = floor_date(CommissioningDate, "year")
+  )
+
+# Step 2.8: pad MunicipalityCode to 8 digits (preserve leading zeros)
+data.quarterly <- data.quarterly |>
+  mutate(MunicipalityCode = str_pad(as.character(MunicipalityCode), 8, pad = "0"))
+
+# FILTER TO BALCONY PVs IN TREATMENT MUNICIPALITIES, INSIDE THE PANEL RANGE
+
+data.quarterly <- data.quarterly |>
+  filter(solar_category == "Plug_in_sola_system - Balcony")
+
+muni_all.quarterly <- data.treatment.quarterly |>
+  distinct(Municipality, MunicipalityCode)
+
+data.quarterly <- data.quarterly |>
+  filter(MunicipalityCode %in% muni_all.quarterly$MunicipalityCode)
+
+lo.quarterly <- min(all_dates.quarterly)
+hi.quarterly <- max(all_dates.quarterly)
+data.quarterly <- data.quarterly |>
+  filter(date.registration.quarter >= lo.quarterly,
+         date.registration.quarter <= hi.quarterly)
+
+# AGGREGATE TO QUARTERLY OUTCOME PANEL (balanced, with cumulative stock)
+
+data.outcome.quarterly <- data.quarterly |>
+  count(MunicipalityCode, date = date.registration.quarter, name = "n_installations") |>
+  collect() |>
+  complete(
+    MunicipalityCode = muni_all.quarterly$MunicipalityCode,
+    date             = all_dates.quarterly,
+    fill             = list(n_installations = 0L)
+  ) |>
+  left_join(muni_all.quarterly, by = "MunicipalityCode") |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(n_installations_cumulative = cumsum(n_installations)) |>
+  ungroup() |>
+  select(Municipality, MunicipalityCode, date,
+         n_installations, n_installations_cumulative)
+
+# POPULATION DENOMINATOR (2023, from Destatis regio)
+
+pop_2023.quarterly <- read_parquet(here("data", "raw", "destatis_population_2023.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",                # municipalities only
+         is.na(`2_variable_attribute_code`),           # sex Total
+         !is.na(`1_variable_attribute_label`),         # drop unnamed rows
+         !value %in% c("-", ".")) |>                   # drop Destatis sentinels (- / .)
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    population_2023  = as.numeric(value)
+  )
+
+data.outcome.quarterly <- data.outcome.quarterly |>
+  left_join(pop_2023.quarterly |> select(MunicipalityCode, population_2023),
+            by = "MunicipalityCode") |>
+  rename(population = population_2023) |>
+  mutate(
+    n_installations_per_1000            = n_installations            / population * 1000,
+    n_installations_cumulative_per_1000 = n_installations_cumulative / population * 1000
+  )
+
+# COVARIATE: 2018 INCOME PER CAPITA (time-invariant)
+
+# 2018 total income — Gesamtbetrag der Einkünfte (EKF002), in Tsd. EUR → EUR
+income_2018.quarterly <- read_parquet(here("data", "raw", "destatis_income_2018.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",                # municipalities only
+         value_variable_code == "EKF002",              # total income (drops LSNW01/LSNW02)
+         !is.na(`1_variable_attribute_label`),
+         !value %in% c("-", ".")) |>
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    total_income_eur = as.numeric(value) * 1000        # Tsd. EUR -> EUR
+  )
+
+# 2018 population — denominator for per-capita income
+pop_2018.quarterly <- read_parquet(here("data", "raw", "destatis_population_2018.parquet")) |>
+  filter(`1_variable_code` == "GEMEIN",
+         is.na(`2_variable_attribute_code`),
+         !is.na(`1_variable_attribute_label`),
+         !value %in% c("-", ".")) |>
+  transmute(
+    Municipality     = `1_variable_attribute_label`,
+    MunicipalityCode = `1_variable_attribute_code`,
+    population_2018  = as.numeric(value)
+  )
+
+income_pc_2018.quarterly <- income_2018.quarterly |>
+  inner_join(pop_2018.quarterly |> select(MunicipalityCode, population_2018),
+             by = "MunicipalityCode") |>
+  mutate(income_per_capita_eur = total_income_eur / population_2018) |>
+  select(Municipality, MunicipalityCode, income_per_capita_eur)
+
+# MERGE — outcome (panel) + treatment (panel) + income covariate (invariant)
+
+data.merged.quarterly <- data.outcome.quarterly |>
+  left_join(data.treatment.quarterly |> select(MunicipalityCode, date, treatment, ever_treated),
+            by = c("MunicipalityCode", "date")) |>
+  left_join(income_pc_2018.quarterly |> select(MunicipalityCode, income_per_capita_eur),
+            by = "MunicipalityCode") |>
+  mutate(year = year(date)) |>
+  arrange(MunicipalityCode, date)
+
+data.merged.quarterly |> print() |> glimpse()
+
+# CONVERT — cast all numeric columns to <dbl>; add integer ID / time index
+data.merged.quarterly <- data.merged.quarterly |>
+  mutate(
+    across(!c(Municipality, MunicipalityCode, date), as.double),
+    id   = as.double(factor(MunicipalityCode)),
+    time = as.double(factor(date))
+  )
+```
+
+Save it:
+
+```{r}
+write_parquet(
+  data.merged.quarterly,
+  here("data", "data_quarterly_majority.parquet")
+)
+
+data.quarterly.final <- read_parquet(
+  here("data", "data_quarterly_majority.parquet")
+)
+
+data.quarterly.final |> print() |> glimpse()
+```

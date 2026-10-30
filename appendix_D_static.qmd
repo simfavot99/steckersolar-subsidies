@@ -1,0 +1,60 @@
+---
+title: 'Appendix D — Static estimator (Table D.1)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, DIDmultiplegtSTAT)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Panel A: all switches
+
+```{r}
+ats <- did_multiplegt_stat(
+  df = data,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "aoss",
+  exact_match = TRUE,
+  placebo = TRUE
+)
+print(ats)
+```
+
+## Panel B: program activations
+
+```{r}
+ats_plus <- did_multiplegt_stat(
+  df = data,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "aoss",
+  exact_match = TRUE,
+  switchers = "up",
+  placebo = TRUE
+)
+print(ats_plus)
+```
+
+## Panel C: program closures
+
+```{r}
+ats_minus <- did_multiplegt_stat(
+  df = data,
+  Y = "n_installations_per_1000",
+  ID = "id",
+  Time = "time",
+  D = "treatment",
+  estimator = "aoss",
+  exact_match = TRUE,
+  switchers = "down",
+  placebo = TRUE
+)
+print(ats_minus)
+```

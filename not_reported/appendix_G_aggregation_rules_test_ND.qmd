@@ -1,0 +1,285 @@
+---
+title: 'Not reported — Alternative aggregation rules, tests of ND'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN, fect)
+
+data_majority <- read_parquet(here("data", "data_quarterly_majority.parquet"))
+data_all_months <- read_parquet(here("data", "data_quarterly_all_months.parquet"))
+```
+
+## Majority rule (2 of 3 months)
+
+### Test of time-constant effects
+
+#### k = 2
+
+```{r}
+majority_t2 <- did_multiplegt_dyn(
+  df             = data_majority,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 2,
+  placebo        = 2,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(majority_t2)
+```
+
+#### k = 3
+
+```{r}
+majority_t3 <- did_multiplegt_dyn(
+  df             = data_majority,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 3,
+  placebo        = 3,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(majority_t3)
+```
+
+#### k = 4
+
+```{r}
+majority_t4 <- did_multiplegt_dyn(
+  df             = data_majority,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 4,
+  placebo        = 4,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(majority_t4)
+```
+
+#### k = 5
+
+```{r}
+majority_t5 <- did_multiplegt_dyn(
+  df             = data_majority,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 5,
+  placebo        = 5,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(majority_t5)
+```
+
+### Carry-over test
+
+#### s = 2
+
+```{r}
+majority_carry_2 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_majority,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 2)
+)
+majority_carry_2$test.out
+majority_carry_2$est.carryover
+majority_carry_2$est.att.off
+```
+
+#### s = 3
+
+```{r}
+majority_carry_3 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_majority,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 3)
+)
+majority_carry_3$test.out
+majority_carry_3$est.carryover
+majority_carry_3$est.att.off
+```
+
+#### s = 4
+
+```{r}
+majority_carry_4 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_majority,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 4)
+)
+majority_carry_4$test.out
+majority_carry_4$est.carryover
+majority_carry_4$est.att.off
+```
+
+## All-months rule (3 of 3 months)
+
+### Test of time-constant effects
+
+#### k = 2
+
+```{r}
+all_months_t2 <- did_multiplegt_dyn(
+  df             = data_all_months,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 2,
+  placebo        = 2,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(all_months_t2)
+```
+
+#### k = 3
+
+```{r}
+all_months_t3 <- did_multiplegt_dyn(
+  df             = data_all_months,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 3,
+  placebo        = 3,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(all_months_t3)
+```
+
+#### k = 4
+
+```{r}
+all_months_t4 <- did_multiplegt_dyn(
+  df             = data_all_months,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 4,
+  placebo        = 4,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(all_months_t4)
+```
+
+#### k = 5
+
+```{r}
+all_months_t5 <- did_multiplegt_dyn(
+  df             = data_all_months,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 5,
+  placebo        = 5,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(all_months_t5)
+```
+
+### Carry-over test
+
+#### s = 2
+
+```{r}
+all_months_carry_2 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_all_months,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 2)
+)
+all_months_carry_2$test.out
+all_months_carry_2$est.carryover
+all_months_carry_2$est.att.off
+```
+
+#### s = 3
+
+```{r}
+all_months_carry_3 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_all_months,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 3)
+)
+all_months_carry_3$test.out
+all_months_carry_3$est.carryover
+all_months_carry_3$est.att.off
+```
+
+#### s = 4
+
+```{r}
+all_months_carry_4 <- fect(
+  n_installations_per_1000 ~ treatment,
+  data             = data_all_months,
+  index            = c("MunicipalityCode", "time"),
+  method           = "fe",
+  force            = "two-way",
+  se               = TRUE,
+  nboots           = 1000,
+  parallel         = TRUE,
+  seed             = 42,
+  carryoverTest    = TRUE,
+  carryover.period = c(1, 4)
+)
+all_months_carry_4$test.out
+all_months_carry_4$est.carryover
+all_months_carry_4$est.att.off
+```

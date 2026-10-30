@@ -1,0 +1,82 @@
+---
+title: 'Section 6.2 — Test of time-constant effects (footnote 16)'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here, polars, DIDmultiplegtDYN)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## k = 2
+
+```{r}
+t2 <- did_multiplegt_dyn(
+  df             = data,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 2,
+  placebo        = 2,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(t2)
+t2$results$p_equality_effects
+```
+
+## k = 3
+
+```{r}
+t3 <- did_multiplegt_dyn(
+  df             = data,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 3,
+  placebo        = 3,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(t3)
+t3$results$p_equality_effects
+```
+
+## k = 4
+
+```{r}
+t4 <- did_multiplegt_dyn(
+  df             = data,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 4,
+  placebo        = 4,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(t4)
+t4$results$p_equality_effects
+```
+
+## k = 5
+
+```{r}
+t5 <- did_multiplegt_dyn(
+  df             = data,
+  outcome        = "n_installations_per_1000",
+  group          = "id",
+  time           = "time",
+  treatment      = "treatment",
+  effects        = 5,
+  placebo        = 5,
+  same_switchers = TRUE,
+  effects_equal  = TRUE
+)
+print(t5)
+t5$results$p_equality_effects
+```

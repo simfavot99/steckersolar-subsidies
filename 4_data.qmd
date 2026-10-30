@@ -1,0 +1,91 @@
+---
+title: 'Chapter 4 — Data'
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, arrow, here)
+
+data <- read_parquet(here("data", "data_quarterly.parquet"))
+```
+
+## Table 1, Panel A
+
+```{r}
+switches <- data |>
+  arrange(MunicipalityCode, date) |>
+  group_by(MunicipalityCode) |>
+  mutate(change = treatment - lag(treatment)) |>
+  summarise(
+    ever_treated = max(ever_treated),
+    activations  = sum(change == 1, na.rm = TRUE),
+    exits        = sum(change == -1, na.rm = TRUE)
+  )
+
+switches |>
+  summarise(
+    municipalities      = n(),
+    n_ever_treated      = sum(ever_treated == 1),
+    n_never_treated     = sum(ever_treated == 0),
+    n_switch_off        = sum(exits >= 1),
+    n_switch_off_twice  = sum(exits == 2),
+    n_activation_events = sum(activations),
+    n_exit_events       = sum(exits)
+  )
+
+data |>
+  summarise(
+    observations  = n(),
+    treated       = sum(treatment),
+    treated_share = mean(treatment)
+  )
+```
+
+## Table 1, Panel B
+
+```{r}
+data |>
+  filter(date >= as.Date("2022-01-01")) |>
+  group_by(ever_treated) |>
+  summarise(
+    mean_registrations = mean(n_installations_per_1000),
+    sd_registrations   = sd(n_installations_per_1000)
+  )
+
+data |>
+  distinct(MunicipalityCode, ever_treated, population, income_per_capita_eur) |>
+  group_by(ever_treated) |>
+  summarise(
+    mean_population   = mean(population / 1000),
+    sd_population     = sd(population / 1000),
+    median_population = median(population / 1000),
+    mean_income       = mean(income_per_capita_eur),
+    sd_income         = sd(income_per_capita_eur)
+  )
+```
+
+## Section 4.1: registrations before and after 2022
+
+```{r}
+data |>
+  group_by(date) |>
+  summarise(mean_registrations = mean(n_installations_per_1000)) |>
+  group_by(period = if_else(date < as.Date("2022-01-01"), "2019-2021", "2022-2026")) |>
+  summarise(
+    max_quarterly_mean = max(mean_registrations),
+    mean               = mean(mean_registrations)
+  )
+```
+
+## Section 5.1: distinct first-switch dates
+
+```{r}
+data |>
+  filter(treatment == 1) |>
+  group_by(MunicipalityCode) |>
+  summarise(first_switch = min(date)) |>
+  summarise(
+    switchers            = n(),
+    distinct_first_dates = n_distinct(first_switch)
+  )
+```
