@@ -1,4 +1,4 @@
-# Replication code
+# Replication data and code
 
 The Effect of Municipal Subsidy Programs on Balcony-PV Adoption in Germany
 Master's thesis, University of Mannheim, 2026
@@ -7,6 +7,8 @@ One municipality is not included because its treatment dates come from a
 confidential survey response. The panels therefore cover 50 municipalities
 instead of the 51 used in the thesis, and the estimates differ slightly from
 those reported.
+
+Archived version: https://doi.org/10.5281/zenodo.22083534
 
 ## Files
 
